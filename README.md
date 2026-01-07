@@ -1,231 +1,277 @@
-# SLIATE ATI Nawalapitiya - Campus Management System
+# 🎓 SLIATE ATI Nawalapitiya - Campus Management System
 
-A comprehensive web-based campus management system for SLIATE Advanced Technological Institute, Nawalapitiya. This system manages students, lecturers, HODs, staff, departments, and courses with complete CRUD operations and role-based access control.
+A secure, full-stack web application for managing campus operations at SLIATE Advanced Technological Institute, Nawalapitiya. Built with the MERN stack featuring JWT authentication, role-based access control, and comprehensive CRUD operations for all campus entities.
 
-## 🚀 Features
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+[![Node.js](https://img.shields.io/badge/Node.js-v16+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-18.2.0-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 
-### Core Modules
-- **👨‍🎓 Student Management** - Complete student lifecycle management including enrollment, academic records, GPA tracking, and attendance
-- **👨‍🏫 Lecturer Management** - Manage lecturer profiles, courses taught, qualifications, and schedules
-- **👔 HOD Management** - Department head management with responsibilities and department assignments
-- **👥 Staff Management** - Administrative and support staff management with different staff types
-- **🏢 Department Management** - Organize and manage academic and administrative departments
-- **📚 Course Management** - Course catalog with prerequisites, credits, and lecturer assignments
+## 📖 Table of Contents
 
-### Security & Authentication
-- JWT-based authentication
-- Role-based access control (Student, Lecturer, HOD, Staff, Admin)
-- Password hashing with bcrypt
-- Protected routes with authorization middleware
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Quick Start](#-quick-start)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [API Documentation](#-api-documentation)
+- [Project Structure](#-project-structure)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-### Technical Features
-- RESTful API architecture
-- MongoDB database with Mongoose ODM
-- React frontend with React Router
-- Responsive design
-- Real-time data updates
-- Comprehensive error handling
+## ✨ Features
 
-## 📋 Prerequisites
+### 👥 User Management & Authentication
+- **5 User Roles**: Admin, Student, Lecturer, HOD, Staff
+- **JWT Authentication**: Secure token-based authentication system
+- **Role-Based Access Control**: Granular permissions per user role
+- **Secure Login**: Unified login page with automatic role-based dashboard redirection
+- **Password Security**: bcryptjs encryption for all passwords
 
-- Node.js (v14 or higher)
-- MongoDB (v4.4 or higher)
-- npm or yarn package manager
+### 📊 Core Modules
+- **👨‍🎓 Student Management**
+  - Complete student profiles with registration numbers
+  - GPA and attendance tracking
+  - Course enrollment management
+  - Academic status monitoring
+  
+- **👨‍🏫 Lecturer Management**
+  - Lecturer profiles with qualifications
+  - Department assignments
+  - Course teaching assignments
+  - Employment type tracking
+  
+- **👔 HOD Management**
+  - Department head profiles
+  - Appointment information
+  - Office and contact details
+  - Responsibility tracking
+  
+- **👥 Staff Management**
+  - Administrative staff profiles
+  - Staff type categorization
+  - Department assignments
+  - Duty management
+  
+- **🏢 Department Management**
+  - Department creation and organization
+  - Building and location tracking
+  - Contact information
+  - Status management
+  
+- **📚 Course Management**
+  - Course catalog with course codes
+  - Credit and semester information
+  - Department linking
+  - Course type classification
 
-## 🛠️ Installation
+## 🛠 Tech Stack
 
-### 1. Clone the repository
+**Frontend:**
+- React 18.2.0
+- React Router DOM 6.20.0
+- Axios 1.6.2
+- CSS3
+
+**Backend:**
+- Node.js
+- Express.js 4.18.2
+- MongoDB (Atlas) + Mongoose 8.0.0
+- JWT (jsonwebtoken 9.0.2)
+- bcryptjs 2.4.3
+- express-validator 7.0.1
+
+**DevOps & Tools:**
+- Nodemon (development)
+- Concurrently (run both servers)
+- Git & GitHub
+
+## ⚡ Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/navee-d/ati-nawalapitiya-system.git
+cd ati-nawalapitiya-system
+
+# Install all dependencies
+npm install
+cd frontend && npm install && cd ..
+
+# Create .env file and configure MongoDB URI
+cp .env.example .env
+
+# Seed the database with sample data
+node backend/scripts/seed.js
+
+# Start both servers (backend + frontend)
+npm run dev-all
+```
+
+**Access the application:**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5000
+
+**Default Admin Login:**
+```
+Email: admin@ati.lk
+Password: admin123
+```
+
+## 🔧 Installation
+
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn
+- MongoDB Atlas account (or local MongoDB)
+- Git
+
+### Step-by-Step Installation
+
+**1. Clone the Repository**
 ```bash
 git clone https://github.com/navee-d/ati-nawalapitiya-system.git
 cd ati-nawalapitiya-system
 ```
 
-### 2. Install dependencies
-
-#### Install backend dependencies
+**2. Install Backend Dependencies**
 ```bash
 npm install
 ```
 
-#### Install frontend dependencies
+**3. Install Frontend Dependencies**
 ```bash
 cd frontend
 npm install
 cd ..
 ```
 
-### 3. Environment Configuration
+**4. Configure Environment Variables**
 
 Create a `.env` file in the root directory:
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your configuration:
 ```env
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/ati_nawalapitiya
-JWT_SECRET=your_secure_jwt_secret_key_here
-JWT_EXPIRE=30d
 NODE_ENV=development
+MONGODB_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/ati-campus
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_EXPIRE=30d
 ```
 
-### 4. Start MongoDB
+**MongoDB Atlas Setup:**
+1. Create account at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+2. Create a new cluster
+3. Add your IP address to whitelist (or allow from anywhere for development)
+4. Create database user credentials
+5. Get connection string and update MONGODB_URI in .env
 
-Make sure MongoDB is running on your system:
+**5. Seed the Database**
 ```bash
-# On Ubuntu/Debian
-sudo systemctl start mongod
-
-# On macOS with Homebrew
-brew services start mongodb-community
-
-# Or run manually
-mongod
+node backend/scripts/seed.js
 ```
 
-## 🚀 Running the Application
+This creates:
+- ✅ Admin user (admin@ati.lk / admin123)
+- ✅ 3 Departments (IT, Engineering, Business Management)
+- ✅ 3 Sample Courses
 
-### Development Mode
+**6. Start the Application**
 
-#### Option 1: Run both servers concurrently
+**Option A: Run both servers concurrently (Recommended)**
 ```bash
 npm run dev-all
 ```
 
-#### Option 2: Run servers separately
-
-**Terminal 1 - Backend Server:**
+**Option B: Run servers separately**
 ```bash
+# Terminal 1 - Backend
 npm run dev
-```
 
-**Terminal 2 - Frontend Development Server:**
-```bash
+# Terminal 2 - Frontend  
 cd frontend
 npm start
 ```
 
-### Production Mode
+**7. Access the Application**
 
-#### Build the frontend:
+Open your browser and navigate to:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5000
+
+## 📱 Usage
+
+### Available Scripts
+
 ```bash
-cd frontend
-npm run build
-cd ..
+npm start          # Start backend in production mode
+npm run dev        # Start backend with nodemon
+npm run client     # Start frontend only
+npm run dev-all    # Start both backend and frontend concurrently
+npm run install-all # Install both backend and frontend dependencies
 ```
 
-#### Start the backend server:
-```bash
-npm start
-```
+### User Roles & Permissions
 
-The application will be available at:
-- Backend API: `http://localhost:5000`
-- Frontend: `http://localhost:3000` (development) or served by backend (production)
+| Role | Can View | Can Create | Can Update | Can Delete |
+|------|----------|------------|------------|------------|
+| **Admin** | All entities | All entities | All entities | All entities |
+| **HOD** | All entities | Students, Courses | Students, Courses | None |
+| **Lecturer** | Own profile, Students | None | Own profile | None |
+| **Staff** | Own profile | None | Own profile | None |
+| **Student** | Own profile | None | Own profile | None |
+
+### Testing the API
+
+See [API_TESTING.md](./API_TESTING.md) for detailed API testing examples.
+
+**Quick Test:**
+```bash
+# Login and get token
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@ati.lk","password":"admin123"}'
+
+# Get all students (replace TOKEN with actual token)
+curl -X GET http://localhost:5000/api/students \
+  -H "Authorization: Bearer TOKEN"
+```
 
 ## 📚 API Documentation
 
 ### Authentication Endpoints
 
-#### Register User
 ```
-POST /api/auth/register
+POST   /api/auth/register       Register new user (Student role default)
+POST   /api/auth/login          Login user and get JWT token
+GET    /api/auth/me             Get current user profile (requires auth)
+```
+
+### Resource Endpoints
+
+| Resource | Endpoints | Auth Required |
+|----------|-----------|---------------|
+| **Students** | GET, POST, PUT, DELETE /api/students | ✅ |
+| **Lecturers** | GET, POST, PUT, DELETE /api/lecturers | ✅ |
+| **HODs** | GET, POST, PUT, DELETE /api/hods | ✅ |
+| **Staff** | GET, POST, PUT, DELETE /api/staff | ✅ |
+| **Departments** | GET, POST, PUT, DELETE /api/departments | ✅ |
+| **Courses** | GET, POST, PUT, DELETE /api/courses | ✅ |
+
+**Example Request:**
+```bash
+POST /api/students
+Authorization: Bearer <your-jwt-token>
 Content-Type: application/json
 
 {
-  "username": "john_doe",
-  "email": "john@example.com",
-  "password": "password123",
-  "role": "student",
-  "firstName": "John",
-  "lastName": "Doe",
-  "nic": "123456789V",
-  "phone": "0771234567",
-  "address": "123 Main St, Nawalapitiya"
+  "studentId": "STU001",
+  "registrationNumber": "2024/IT/001",
+  "yearOfStudy": 1,
+  "semester": 1,
+  "gpa": 3.5,
+  "attendancePercentage": 95
 }
 ```
 
-#### Login
-```
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "john@example.com",
-  "password": "password123"
-}
-```
-
-#### Get Current User
-```
-GET /api/auth/me
-Authorization: Bearer <token>
-```
-
-### Student Endpoints
-
-| Method | Endpoint | Description | Authorization |
-|--------|----------|-------------|---------------|
-| GET | /api/students | Get all students | Any authenticated user |
-| GET | /api/students/:id | Get single student | Any authenticated user |
-| POST | /api/students | Create new student | Admin, HOD |
-| PUT | /api/students/:id | Update student | Admin, HOD |
-| DELETE | /api/students/:id | Delete student | Admin |
-| GET | /api/students/department/:departmentId | Get students by department | Any authenticated user |
-
-### Lecturer Endpoints
-
-| Method | Endpoint | Description | Authorization |
-|--------|----------|-------------|---------------|
-| GET | /api/lecturers | Get all lecturers | Any authenticated user |
-| GET | /api/lecturers/:id | Get single lecturer | Any authenticated user |
-| POST | /api/lecturers | Create new lecturer | Admin, HOD |
-| PUT | /api/lecturers/:id | Update lecturer | Admin, HOD |
-| DELETE | /api/lecturers/:id | Delete lecturer | Admin |
-| GET | /api/lecturers/department/:departmentId | Get lecturers by department | Any authenticated user |
-
-### HOD Endpoints
-
-| Method | Endpoint | Description | Authorization |
-|--------|----------|-------------|---------------|
-| GET | /api/hods | Get all HODs | Any authenticated user |
-| GET | /api/hods/:id | Get single HOD | Any authenticated user |
-| POST | /api/hods | Create new HOD | Admin |
-| PUT | /api/hods/:id | Update HOD | Admin |
-| DELETE | /api/hods/:id | Delete HOD | Admin |
-
-### Staff Endpoints
-
-| Method | Endpoint | Description | Authorization |
-|--------|----------|-------------|---------------|
-| GET | /api/staff | Get all staff | Any authenticated user |
-| GET | /api/staff/:id | Get single staff member | Any authenticated user |
-| POST | /api/staff | Create new staff member | Admin |
-| PUT | /api/staff/:id | Update staff member | Admin |
-| DELETE | /api/staff/:id | Delete staff member | Admin |
-| GET | /api/staff/type/:staffType | Get staff by type | Any authenticated user |
-
-### Department Endpoints
-
-| Method | Endpoint | Description | Authorization |
-|--------|----------|-------------|---------------|
-| GET | /api/departments | Get all departments | Any authenticated user |
-| GET | /api/departments/:id | Get single department | Any authenticated user |
-| POST | /api/departments | Create new department | Admin |
-| PUT | /api/departments/:id | Update department | Admin |
-| DELETE | /api/departments/:id | Delete department | Admin |
-
-### Course Endpoints
-
-| Method | Endpoint | Description | Authorization |
-|--------|----------|-------------|---------------|
-| GET | /api/courses | Get all courses | Any authenticated user |
-| GET | /api/courses/:id | Get single course | Any authenticated user |
-| POST | /api/courses | Create new course | Admin, HOD |
-| PUT | /api/courses/:id | Update course | Admin, HOD |
-| DELETE | /api/courses/:id | Delete course | Admin |
-| GET | /api/courses/department/:departmentId | Get courses by department | Any authenticated user |
+For complete API documentation, see [API_TESTING.md](./API_TESTING.md)
 
 ## 🗂️ Project Structure
 
@@ -240,7 +286,7 @@ ati-nawalapitiya-system/
 │   │   ├── staff.controller.js
 │   │   ├── department.controller.js
 │   │   └── course.controller.js
-│   ├── models/               # Database models
+│   ├── models/               # Mongoose schemas
 │   │   ├── User.model.js
 │   │   ├── Student.model.js
 │   │   ├── Lecturer.model.js
@@ -258,159 +304,118 @@ ati-nawalapitiya-system/
 │   │   └── course.routes.js
 │   ├── middleware/           # Custom middleware
 │   │   └── auth.middleware.js
-│   └── server.js            # Express server setup
+│   ├── scripts/              # Utility scripts
+│   │   └── seed.js
+│   └── server.js             # Express app entry point
 ├── frontend/
-│   ├── public/
+│   ├── public/               # Static files
 │   │   └── index.html
-│   ├── src/
-│   │   ├── pages/           # React page components
-│   │   │   ├── Home.js
-│   │   │   ├── Students.js
-│   │   │   ├── Lecturers.js
-│   │   │   ├── HODs.js
-│   │   │   ├── Staff.js
-│   │   │   ├── Departments.js
-│   │   │   ├── Courses.js
-│   │   │   └── Login.js
-│   │   ├── services/        # API services
-│   │   │   └── api.js
-│   │   ├── App.js
-│   │   ├── App.css
-│   │   └── index.js
-│   └── package.json
-├── .env.example
+│   └── src/
+│       ├── pages/            # React components
+│       │   ├── Home.js
+│       │   ├── Login.js
+│       │   ├── Students.js
+│       │   ├── Lecturers.js
+│       │   ├── HODs.js
+│       │   ├── Staff.js
+│       │   ├── Departments.js
+│       │   └── Courses.js
+│       ├── services/         # API services
+│       │   └── api.js
+│       ├── App.js            # Main React component
+│       ├── App.css           # Global styles
+│       └── index.js          # React entry point
+├── .env                      # Environment variables (not in repo)
+├── .env.example              # Example environment file
 ├── .gitignore
-├── package.json
-└── README.md
+├── package.json              # Backend dependencies
+├── README.md                 # This file
+└── start.sh                  # Quick start script
 ```
 
-## 👥 User Roles
+## 🔐 Security Features
 
-### Admin
-- Full system access
-- Create, read, update, delete all resources
-- Manage all users and modules
+- **JWT Authentication**: Secure token-based authentication
+- **Password Hashing**: bcryptjs for password encryption
+- **Protected Routes**: Middleware-based route protection
+- **Role Validation**: Role-based access control on all endpoints
+- **Input Validation**: express-validator for request validation
+- **CORS**: Configured for secure cross-origin requests
 
-### HOD (Head of Department)
-- View all resources
-- Create and manage students in their department
-- Create and manage lecturers in their department
-- Create and manage courses in their department
+## 🚀 Deployment
 
-### Lecturer
-- View all resources
-- Update own profile
-- View assigned courses and students
+### Backend Deployment (Heroku/Railway)
 
-### Student
-- View courses and lecturers
-- Update own profile
-- View academic records
-
-### Staff
-- View relevant resources based on staff type
-- Update own profile
-
-## 🔐 Security Best Practices
-
-1. **Change JWT Secret**: Update `JWT_SECRET` in `.env` with a strong, unique secret
-2. **Use HTTPS**: In production, always use HTTPS
-3. **Regular Updates**: Keep dependencies updated
-4. **Environment Variables**: Never commit `.env` file
-5. **Password Policy**: Enforce strong password requirements
-6. **Input Validation**: All inputs are validated before processing
-
-## 🧪 Testing
-
-### Manual API Testing with cURL
-
-#### Login
 ```bash
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@ati.lk","password":"admin123"}'
+# Build command
+npm install
+
+# Start command
+npm start
+
+# Environment variables
+PORT=5000
+MONGODB_URI=your-mongodb-atlas-uri
+JWT_SECRET=your-secret-key
+JWT_EXPIRE=30d
+NODE_ENV=production
 ```
 
-#### Get All Students
+### Frontend Deployment (Vercel/Netlify)
+
 ```bash
-curl -X GET http://localhost:5000/api/students \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+# Build command
+npm install && npm run build
+
+# Publish directory
+build/
+
+# Environment variables
+REACT_APP_API_URL=https://your-backend-api.com/api
 ```
-
-## 📝 Database Schema
-
-### User
-- username, email, password (hashed)
-- role (student, lecturer, hod, staff, admin)
-- firstName, lastName, nic, phone, address
-- isActive, timestamps
-
-### Student
-- studentId, registrationNumber
-- course (ref: Course), department (ref: Department)
-- batch, yearOfStudy, semester
-- enrollmentDate, academicStatus
-- gpa, attendance
-- guardianName, guardianPhone, emergencyContact
-
-### Lecturer
-- lecturerId, department (ref: Department)
-- designation, qualification, specialization
-- joinDate, officeRoom, officeHours
-- coursesTaught (ref: Course), employmentType
-
-### HOD
-- hodId, department (ref: Department)
-- designation, qualification, specialization
-- appointmentDate, officeRoom, officeHours
-- responsibilities
-
-### Staff
-- staffId, department (ref: Department)
-- designation, staffType
-- joinDate, officeRoom, workingHours
-- employmentType, responsibilities
-
-### Department
-- name, code, description
-- hod (ref: HOD)
-- establishedYear, building
-- officePhone, email, isActive
-
-### Course
-- courseCode, courseName
-- department (ref: Department)
-- credits, semester, year
-- description, lecturers (ref: Lecturer)
-- prerequisites (ref: Course)
-- courseType, isActive
 
 ## 🤝 Contributing
 
+Contributions are welcome! Please follow these steps:
+
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 👨‍💻 Author
 
-**SLIATE ATI Nawalapitiya**
+**SLIATE ATI Nawalapitiya Development Team**
+- GitHub: [@navee-d](https://github.com/navee-d)
 
 ## 🙏 Acknowledgments
 
-- SLIATE (Sri Lanka Institute of Advanced Technological Education)
-- ATI Nawalapitiya Campus
-- All contributors and stakeholders
+- SLIATE Sri Lanka
+- Advanced Technological Institute, Nawalapitiya
+- MERN Stack Community
+- All contributors and supporters
 
 ## 📞 Support
 
-For support, email support@ati.lk or create an issue in the repository.
+For support, email: admin@ati.lk or open an issue in the GitHub repository.
+
+## 🔗 Links
+
+- [Project Repository](https://github.com/navee-d/ati-nawalapitiya-system)
+- [API Testing Guide](./API_TESTING.md)
+- [Development Guide](./DEVELOPMENT.md)
+- [Project Requirements](./README_REQUIREMENTS.md)
+- [Quick Start Guide](./QUICKSTART.md)
 
 ---
 
-**Made with ❤️ for SLIATE ATI Nawalapitiya**
+**Status**: ✅ Active Development  
+**Version**: 1.0.0  
+**Last Updated**: January 7, 2026
+
+Made with ❤️ for SLIATE ATI Nawalapitiya

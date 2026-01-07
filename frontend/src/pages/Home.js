@@ -1,59 +1,183 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 function Home() {
+  const [stats, setStats] = useState({
+    students: 0,
+    lecturers: 0,
+    departments: 0,
+    courses: 0
+  });
+  
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userName = user.name || 'User';
+
+  useEffect(() => {
+    // Fetch statistics
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers = { 'Authorization': `Bearer ${token}` };
+        
+        const [studentsRes, lecturersRes, deptRes, coursesRes] = await Promise.all([
+          fetch('http://localhost:5000/api/students', { headers }).then(r => r.json()),
+          fetch('http://localhost:5000/api/lecturers', { headers }).then(r => r.json()),
+          fetch('http://localhost:5000/api/departments', { headers }).then(r => r.json()),
+          fetch('http://localhost:5000/api/courses', { headers }).then(r => r.json())
+        ]);
+        
+        setStats({
+          students: studentsRes.length || 0,
+          lecturers: lecturersRes.length || 0,
+          departments: deptRes.length || 0,
+          courses: coursesRes.length || 0
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+    
+    fetchStats();
+  }, []);
+
   return (
-    <div>
-      <div className="card">
-        <h2>Welcome to ATI Nawalapitiya Campus Management System</h2>
-        <p>
-          This comprehensive management system helps manage all aspects of campus operations
-          including students, lecturers, HODs, staff, departments, and courses.
-        </p>
+    <div className="dashboard">
+      {/* Stats Cards */}
+      <div className="stats-grid">
+        <div className="stat-card stat-card-blue">
+          <div className="stat-icon">👨‍🎓</div>
+          <div className="stat-info">
+            <p className="stat-label">Total Students</p>
+            <h3 className="stat-value">{stats.students}</h3>
+            <span className="stat-change positive">+12% from last month</span>
+          </div>
+        </div>
+
+        <div className="stat-card stat-card-purple">
+          <div className="stat-icon">👨‍🏫</div>
+          <div className="stat-info">
+            <p className="stat-label">Total Lecturers</p>
+            <h3 className="stat-value">{stats.lecturers}</h3>
+            <span className="stat-change positive">+5% from last month</span>
+          </div>
+        </div>
+
+        <div className="stat-card stat-card-green">
+          <div className="stat-icon">🏢</div>
+          <div className="stat-info">
+            <p className="stat-label">Departments</p>
+            <h3 className="stat-value">{stats.departments}</h3>
+            <span className="stat-change neutral">No change</span>
+          </div>
+        </div>
+
+        <div className="stat-card stat-card-orange">
+          <div className="stat-icon">📚</div>
+          <div className="stat-info">
+            <p className="stat-label">Active Courses</p>
+            <h3 className="stat-value">{stats.courses}</h3>
+            <span className="stat-change positive">+8% from last month</span>
+          </div>
+        </div>
       </div>
 
-      <div className="grid">
-        <div className="module-card">
-          <h3>👨‍🎓 Students</h3>
-          <p>Manage student records, enrollment, and academic information</p>
+      {/* Main Content Grid */}
+      <div className="dashboard-grid">
+        {/* Welcome Card */}
+        <div className="dashboard-card welcome-card">
+          <div className="welcome-content">
+            <h2 className="welcome-title">Welcome back, {userName}!</h2>
+            <p className="welcome-subtitle">
+              Here's what's happening with your campus management system today.
+            </p>
+          </div>
+          <div className="welcome-illustration">
+            <div className="brain-animation"></div>
+          </div>
         </div>
 
-        <div className="module-card">
-          <h3>👨‍🏫 Lecturers</h3>
-          <p>Manage lecturer profiles, courses taught, and schedules</p>
+        {/* Quick Actions */}
+        <div className="dashboard-card">
+          <h3 className="card-title">Quick Actions</h3>
+          <div className="quick-actions">
+            <a href="/students" className="action-btn">
+              <span className="action-icon">👨‍🎓</span>
+              <span>Manage Students</span>
+            </a>
+            <a href="/lecturers" className="action-btn">
+              <span className="action-icon">👨‍🏫</span>
+              <span>Manage Lecturers</span>
+            </a>
+            <a href="/courses" className="action-btn">
+              <span className="action-icon">📚</span>
+              <span>Manage Courses</span>
+            </a>
+            <a href="/departments" className="action-btn">
+              <span className="action-icon">🏢</span>
+              <span>Manage Departments</span>
+            </a>
+          </div>
         </div>
 
-        <div className="module-card">
-          <h3>👔 HODs</h3>
-          <p>Manage department heads and their responsibilities</p>
+        {/* Performance Metrics */}
+        <div className="dashboard-card">
+          <h3 className="card-title">Campus Performance</h3>
+          <div className="performance-metric">
+            <div className="metric-header">
+              <span>Student Satisfaction</span>
+              <span className="metric-percentage">95%</span>
+            </div>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: '95%' }}></div>
+            </div>
+          </div>
+          <div className="performance-metric">
+            <div className="metric-header">
+              <span>Course Completion</span>
+              <span className="metric-percentage">87%</span>
+            </div>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: '87%' }}></div>
+            </div>
+          </div>
+          <div className="performance-metric">
+            <div className="metric-header">
+              <span>Attendance Rate</span>
+              <span className="metric-percentage">92%</span>
+            </div>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: '92%' }}></div>
+            </div>
+          </div>
         </div>
 
-        <div className="module-card">
-          <h3>👥 Staff</h3>
-          <p>Manage administrative and support staff members</p>
+        {/* Activity Chart */}
+        <div className="dashboard-card chart-card">
+          <h3 className="card-title">Activity Overview</h3>
+          <div className="chart-container">
+            <div className="bar-chart">
+              <div className="bar" style={{ height: '60%' }}><span className="bar-label">Mon</span></div>
+              <div className="bar" style={{ height: '45%' }}><span className="bar-label">Tue</span></div>
+              <div className="bar" style={{ height: '80%' }}><span className="bar-label">Wed</span></div>
+              <div className="bar" style={{ height: '70%' }}><span className="bar-label">Thu</span></div>
+              <div className="bar" style={{ height: '90%' }}><span className="bar-label">Fri</span></div>
+              <div className="bar" style={{ height: '55%' }}><span className="bar-label">Sat</span></div>
+              <div className="bar" style={{ height: '35%' }}><span className="bar-label">Sun</span></div>
+            </div>
+          </div>
         </div>
 
-        <div className="module-card">
-          <h3>🏢 Departments</h3>
-          <p>Manage academic and administrative departments</p>
+        {/* Recent Activity */}
+        {/* Recent Activity */}
+        <div className="dashboard-card">
+          <h3 className="card-title">Recent Activity</h3>
+          <ul className="activity-list">
+            <li>✓ 5 new students registered today</li>
+            <li>✓ 3 courses updated this week</li>
+            <li>✓ 2 lecturers added to IT department</li>
+            <li>✓ Attendance records updated</li>
+            <li>✓ GPA calculations completed</li>
+          </ul>
         </div>
-
-        <div className="module-card">
-          <h3>📚 Courses</h3>
-          <p>Manage course catalog, credits, and prerequisites</p>
-        </div>
-      </div>
-
-      <div className="card" style={{ marginTop: '30px' }}>
-        <h2>System Features</h2>
-        <ul style={{ paddingLeft: '20px', lineHeight: '2' }}>
-          <li>Complete user authentication and authorization</li>
-          <li>Role-based access control (Student, Lecturer, HOD, Staff, Admin)</li>
-          <li>CRUD operations for all modules</li>
-          <li>Department-wise filtering and organization</li>
-          <li>Course management with prerequisites</li>
-          <li>Student academic tracking (GPA, attendance)</li>
-          <li>Comprehensive reporting capabilities</li>
-        </ul>
       </div>
     </div>
   );
