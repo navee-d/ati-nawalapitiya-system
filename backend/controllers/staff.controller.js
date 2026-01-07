@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Staff = require('../models/Staff.model');
 const User = require('../models/User.model');
 
@@ -56,6 +57,9 @@ exports.getStaff = async (req, res) => {
 // @route   POST /api/staff
 // @access  Private/Admin
 exports.createStaff = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const {
       username, email, password, firstName, lastName, nic, phone, address,
@@ -63,8 +67,7 @@ exports.createStaff = async (req, res) => {
       officeRoom, workingHours, employmentType, responsibilities
     } = req.body;
 
-    // Create user account
-    const user = await User.create({
+    const users = await User.create([{
       username,
       email,
       password,
@@ -74,10 +77,11 @@ exports.createStaff = async (req, res) => {
       nic,
       phone,
       address,
-    });
+    }], { session });
 
-    // Create staff profile
-    const staff = await Staff.create({
+    const user = users[0];
+
+    const newStaff = await Staff.create([{
       user: user._id,
       staffId,
       department,
@@ -88,9 +92,12 @@ exports.createStaff = async (req, res) => {
       workingHours,
       employmentType,
       responsibilities,
-    });
+    }], { session });
 
-    const populatedStaff = await Staff.findById(staff._id)
+    await session.commitTransaction();
+    session.endSession();
+
+    const populatedStaff = await Staff.findById(newStaff[0]._id)
       .populate('user', '-password')
       .populate('department');
 
@@ -100,6 +107,8 @@ exports.createStaff = async (req, res) => {
       data: populatedStaff,
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({
       success: false,
       message: error.message,
@@ -127,6 +136,10 @@ exports.updateStaff = async (req, res) => {
     })
       .populate('user', '-password')
       .populate('department');
+      
+    if (req.body.firstName || req.body.lastName || req.body.email) {
+       await User.findByIdAndUpdate(staff.user._id, req.body, { new: true });
+    }
 
     res.status(200).json({
       success: true,
@@ -145,19 +158,26 @@ exports.updateStaff = async (req, res) => {
 // @route   DELETE /api/staff/:id
 // @access  Private/Admin
 exports.deleteStaff = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const staff = await Staff.findById(req.params.id);
+    const staff = await Staff.findById(req.params.id).session(session);
 
     if (!staff) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({
         success: false,
         message: 'Staff member not found',
       });
     }
 
-    // Delete associated user account
-    await User.findByIdAndDelete(staff.user);
-    await staff.deleteOne();
+    await User.findByIdAndDelete(staff.user).session(session);
+    await staff.deleteOne({ session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(200).json({
       success: true,
@@ -165,6 +185,8 @@ exports.deleteStaff = async (req, res) => {
       data: {},
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({
       success: false,
       message: error.message,

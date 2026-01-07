@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Lecturer = require('../models/Lecturer.model');
 const User = require('../models/User.model');
 
@@ -58,6 +59,9 @@ exports.getLecturer = async (req, res) => {
 // @route   POST /api/lecturers
 // @access  Private/Admin/HOD
 exports.createLecturer = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const {
       username, email, password, firstName, lastName, nic, phone, address,
@@ -65,8 +69,7 @@ exports.createLecturer = async (req, res) => {
       joinDate, officeRoom, officeHours, employmentType
     } = req.body;
 
-    // Create user account
-    const user = await User.create({
+    const users = await User.create([{
       username,
       email,
       password,
@@ -76,10 +79,11 @@ exports.createLecturer = async (req, res) => {
       nic,
       phone,
       address,
-    });
+    }], { session });
 
-    // Create lecturer profile
-    const lecturer = await Lecturer.create({
+    const user = users[0];
+
+    const lecturers = await Lecturer.create([{
       user: user._id,
       lecturerId,
       department,
@@ -90,9 +94,12 @@ exports.createLecturer = async (req, res) => {
       officeRoom,
       officeHours,
       employmentType,
-    });
+    }], { session });
 
-    const populatedLecturer = await Lecturer.findById(lecturer._id)
+    await session.commitTransaction();
+    session.endSession();
+
+    const populatedLecturer = await Lecturer.findById(lecturers[0]._id)
       .populate('user', '-password')
       .populate('department');
 
@@ -102,6 +109,8 @@ exports.createLecturer = async (req, res) => {
       data: populatedLecturer,
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({
       success: false,
       message: error.message,
@@ -131,6 +140,10 @@ exports.updateLecturer = async (req, res) => {
       .populate('department')
       .populate('coursesTaught');
 
+    if (req.body.firstName || req.body.lastName || req.body.email) {
+       await User.findByIdAndUpdate(lecturer.user._id, req.body, { new: true });
+    }
+
     res.status(200).json({
       success: true,
       message: 'Lecturer updated successfully',
@@ -148,19 +161,26 @@ exports.updateLecturer = async (req, res) => {
 // @route   DELETE /api/lecturers/:id
 // @access  Private/Admin
 exports.deleteLecturer = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const lecturer = await Lecturer.findById(req.params.id);
+    const lecturer = await Lecturer.findById(req.params.id).session(session);
 
     if (!lecturer) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({
         success: false,
         message: 'Lecturer not found',
       });
     }
 
-    // Delete associated user account
-    await User.findByIdAndDelete(lecturer.user);
-    await lecturer.deleteOne();
+    await User.findByIdAndDelete(lecturer.user).session(session);
+    await lecturer.deleteOne({ session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(200).json({
       success: true,
@@ -168,6 +188,8 @@ exports.deleteLecturer = async (req, res) => {
       data: {},
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({
       success: false,
       message: error.message,

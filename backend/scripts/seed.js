@@ -68,15 +68,7 @@ const lecturersData = [
   { username: 'lec_thm', name: 'Kasun Fernando', dept: 'THM', role: 'Assistant Lecturer', email: 'kasun@ati.lk' }
 ];
 
-// --- 2. HELPERS ---
-
-// Generate dummy NIC based on index to ensure uniqueness
-const generateNIC = (index) => {
-  const num = index.replace(/\D/g, '').padEnd(9, '0').substring(0, 9);
-  return `${num}V`;
-};
-
-// --- 3. SEED FUNCTION ---
+// --- 2. SEED FUNCTION ---
 
 async function seedDatabase() {
   try {
@@ -101,7 +93,7 @@ async function seedDatabase() {
     await User.create({
       username: 'admin',
       email: 'admin@ati.lk',
-      password: 'admin123', // Will be hashed by pre-save hook
+      password: 'admin123',
       role: 'admin',
       firstName: 'System',
       lastName: 'Administrator',
@@ -126,13 +118,16 @@ async function seedDatabase() {
     const courseDocs = await Course.insertMany(coursesWithIds);
     console.log(`${courseDocs.length} courses created`);
 
-    // Helper to get course ID
     const getCourseId = (code) => courseDocs.find(c => c.courseCode === code)?._id;
 
     // --- CREATE LECTURERS & HODs ---
     const lecturerDocs = [];
-    for (const l of lecturersData) {
+    
+    // Using a loop with index 'i' to guarantee unique NICs for lecturers
+    for (let i = 0; i < lecturersData.length; i++) {
+      const l = lecturersData[i];
       const nameParts = l.name.split(' ');
+      
       const user = await User.create({
         username: l.username,
         email: l.email,
@@ -140,7 +135,7 @@ async function seedDatabase() {
         role: 'lecturer',
         firstName: nameParts[0],
         lastName: nameParts[1] || '',
-        nic: generateNIC(l.username + '123'),
+        nic: `85100${i.toString().padStart(3, '0')}V`, // e.g. 85100000V, 85100001V
         phone: '0771234567',
         address: 'Staff Quarters'
       });
@@ -156,10 +151,9 @@ async function seedDatabase() {
       });
       lecturerDocs.push(lecturer);
 
-      // Make the first one HOD of that department too
+      // Create HOD if not exists
       const deptHOD = await HOD.findOne({ department: getDeptId(l.dept) });
       if (!deptHOD) {
-        // Create user for HOD (separate account for simplicity)
         const hodUser = await User.create({
           username: `hod_${l.dept.toLowerCase()}`,
           email: `hod_${l.dept.toLowerCase()}@ati.lk`,
@@ -167,7 +161,7 @@ async function seedDatabase() {
           role: 'hod',
           firstName: 'Head',
           lastName: l.dept,
-          nic: generateNIC(`HOD${l.dept}`),
+          nic: `75200${i.toString().padStart(3, '0')}V`, // Unique HOD NIC
           phone: '0777777777',
           address: 'HOD Office'
         });
@@ -187,14 +181,15 @@ async function seedDatabase() {
     // --- CREATE STUDENTS (FROM CSV DATA) ---
     let studentCount = 0;
     for (const s of realStudentData) {
-      // 1. Create User
       const nameParts = s.name.split(' ');
       const firstName = nameParts[0];
       const lastName = nameParts.slice(1).join(' ');
-      
-      // Ensure unique email/username using index number
       const safeIndex = s.index.replace(/\//g, '_').toLowerCase();
       
+      // FIX: Generate unique sequential NIC for students to avoid collisions 
+      // between different departments that have overlapping index numbers (e.g. 0003)
+      const studentNic = `2000${studentCount.toString().padStart(5, '0')}V`; // 200000000V, 200000001V, etc.
+
       const user = await User.create({
         username: safeIndex,
         email: `${safeIndex}@ati.lk`,
@@ -202,30 +197,28 @@ async function seedDatabase() {
         role: 'student',
         firstName: firstName,
         lastName: lastName || 'Student',
-        nic: generateNIC(s.index),
+        nic: studentNic,
         phone: s.phone,
         address: s.address
       });
 
-      // 2. Identify Dept from Course Code
-      let deptCode = 'IT'; // default
+      let deptCode = 'IT';
       if (s.course.includes('HNDM')) deptCode = 'BM';
       if (s.course.includes('HNDE')) deptCode = 'EN';
       if (s.course.includes('HNDTHM')) deptCode = 'THM';
 
-      // 3. Create Student Profile
       await Student.create({
         user: user._id,
         studentId: s.index,
-        registrationNumber: `REG-${s.index.split('/').pop()}`, // Generate Reg No
+        registrationNumber: `REG-${s.index.split('/').pop()}-${studentCount}`, // Ensure unique RegNo too
         course: getCourseId(s.course),
         department: getDeptId(deptCode),
         batch: s.batch,
-        yearOfStudy: 4, // As per convocation list (graduated)
+        yearOfStudy: 4,
         semester: 2,
         enrollmentDate: new Date(`${s.batch}-01-01`),
         academicStatus: 'graduated',
-        gpa: 3.0, // Default dummy GPA
+        gpa: 3.0,
         attendance: 85,
         guardianName: 'Parent',
         guardianPhone: '0770000000'
@@ -235,35 +228,36 @@ async function seedDatabase() {
     console.log(`${studentCount} Students created from real data`);
 
     // --- CREATE TIMETABLES ---
-    const timetables = [
-      {
-        course: getCourseId('HNDE-FT'),
-        lecturer: lecturerDocs.find(l => l.designation === 'Lecturer')._id, // Sanduni
-        department: getDeptId('EN'),
-        dayOfWeek: 'Monday',
-        startTime: '08:30',
-        endTime: '10:30',
-        room: 'Lec Hall 1',
-        sessionType: 'Lecture',
-        semester: 1,
-        academicYear: '2025'
-      },
-      {
-        course: getCourseId('HNDM'),
-        lecturer: lecturerDocs.find(l => l.designation === 'Senior Lecturer')._id, // Nimal
-        department: getDeptId('BM'),
-        dayOfWeek: 'Tuesday',
-        startTime: '10:30',
-        endTime: '12:30',
-        room: 'Lab 2',
-        sessionType: 'Lecture',
-        semester: 1,
-        academicYear: '2025'
-      }
-    ];
-
-    await Timetable.insertMany(timetables);
-    console.log(`${timetables.length} Timetable entries created`);
+    if (lecturerDocs.length > 0) {
+       const timetables = [
+        {
+          course: getCourseId('HNDE-FT'),
+          lecturer: lecturerDocs[1]._id, 
+          department: getDeptId('EN'),
+          dayOfWeek: 'Monday',
+          startTime: '08:30',
+          endTime: '10:30',
+          room: 'Lec Hall 1',
+          sessionType: 'Lecture',
+          semester: 1,
+          academicYear: '2025'
+        },
+        {
+          course: getCourseId('HNDM'),
+          lecturer: lecturerDocs[0]._id, 
+          department: getDeptId('BM'),
+          dayOfWeek: 'Tuesday',
+          startTime: '10:30',
+          endTime: '12:30',
+          room: 'Lab 2',
+          sessionType: 'Lecture',
+          semester: 1,
+          academicYear: '2025'
+        }
+      ];
+      await Timetable.insertMany(timetables);
+      console.log(`${timetables.length} Timetable entries created`);
+    }
 
     console.log('\n=== SEEDING COMPLETE ===');
     console.log('Login with:');

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const HOD = require('../models/HOD.model');
 const User = require('../models/User.model');
 const Department = require('../models/Department.model');
@@ -57,6 +58,9 @@ exports.getHOD = async (req, res) => {
 // @route   POST /api/hods
 // @access  Private/Admin
 exports.createHOD = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const {
       username, email, password, firstName, lastName, nic, phone, address,
@@ -64,17 +68,17 @@ exports.createHOD = async (req, res) => {
       officeRoom, officeHours, responsibilities
     } = req.body;
 
-    // Check if department already has a HOD
-    const existingHOD = await HOD.findOne({ department });
+    const existingHOD = await HOD.findOne({ department }).session(session);
     if (existingHOD) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({
         success: false,
         message: 'This department already has a HOD',
       });
     }
 
-    // Create user account
-    const user = await User.create({
+    const users = await User.create([{
       username,
       email,
       password,
@@ -84,10 +88,11 @@ exports.createHOD = async (req, res) => {
       nic,
       phone,
       address,
-    });
+    }], { session });
 
-    // Create HOD profile
-    const hod = await HOD.create({
+    const user = users[0];
+
+    const hods = await HOD.create([{
       user: user._id,
       hodId,
       department,
@@ -97,10 +102,15 @@ exports.createHOD = async (req, res) => {
       officeRoom,
       officeHours,
       responsibilities,
-    });
+    }], { session });
+
+    const hod = hods[0];
 
     // Update department with HOD reference
-    await Department.findByIdAndUpdate(department, { hod: hod._id });
+    await Department.findByIdAndUpdate(department, { hod: hod._id }, { session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     const populatedHOD = await HOD.findById(hod._id)
       .populate('user', '-password')
@@ -112,6 +122,8 @@ exports.createHOD = async (req, res) => {
       data: populatedHOD,
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({
       success: false,
       message: error.message,
@@ -139,6 +151,10 @@ exports.updateHOD = async (req, res) => {
     })
       .populate('user', '-password')
       .populate('department');
+      
+    if (req.body.firstName || req.body.lastName || req.body.email) {
+       await User.findByIdAndUpdate(hod.user._id, req.body, { new: true });
+    }
 
     res.status(200).json({
       success: true,
@@ -157,10 +173,15 @@ exports.updateHOD = async (req, res) => {
 // @route   DELETE /api/hods/:id
 // @access  Private/Admin
 exports.deleteHOD = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const hod = await HOD.findById(req.params.id);
+    const hod = await HOD.findById(req.params.id).session(session);
 
     if (!hod) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({
         success: false,
         message: 'HOD not found',
@@ -168,11 +189,13 @@ exports.deleteHOD = async (req, res) => {
     }
 
     // Remove HOD reference from department
-    await Department.findByIdAndUpdate(hod.department, { $unset: { hod: 1 } });
+    await Department.findByIdAndUpdate(hod.department, { $unset: { hod: 1 } }, { session });
 
-    // Delete associated user account
-    await User.findByIdAndDelete(hod.user);
-    await hod.deleteOne();
+    await User.findByIdAndDelete(hod.user).session(session);
+    await hod.deleteOne({ session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(200).json({
       success: true,
@@ -180,6 +203,8 @@ exports.deleteHOD = async (req, res) => {
       data: {},
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({
       success: false,
       message: error.message,

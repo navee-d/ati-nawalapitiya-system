@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Student = require('../models/Student.model');
 const User = require('../models/User.model');
 
@@ -58,6 +59,9 @@ exports.getStudent = async (req, res) => {
 // @route   POST /api/students
 // @access  Private/Admin/HOD
 exports.createStudent = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const {
       username, email, password, firstName, lastName, nic, phone, address,
@@ -65,8 +69,8 @@ exports.createStudent = async (req, res) => {
       semester, enrollmentDate, guardianName, guardianPhone, emergencyContact
     } = req.body;
 
-    // Create user account
-    const user = await User.create({
+    // 1. Create user account (returns an array when using session)
+    const users = await User.create([{
       username,
       email,
       password,
@@ -76,10 +80,12 @@ exports.createStudent = async (req, res) => {
       nic,
       phone,
       address,
-    });
+    }], { session });
 
-    // Create student profile
-    const student = await Student.create({
+    const user = users[0];
+
+    // 2. Create student profile linked to user
+    const students = await Student.create([{
       user: user._id,
       studentId,
       registrationNumber,
@@ -92,9 +98,13 @@ exports.createStudent = async (req, res) => {
       guardianName,
       guardianPhone,
       emergencyContact,
-    });
+    }], { session });
 
-    const populatedStudent = await Student.findById(student._id)
+    await session.commitTransaction();
+    session.endSession();
+
+    // Fetch populated data to return
+    const populatedStudent = await Student.findById(students[0]._id)
       .populate('user', '-password')
       .populate('course')
       .populate('department');
@@ -105,9 +115,11 @@ exports.createStudent = async (req, res) => {
       data: populatedStudent,
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || 'Transaction failed',
     });
   }
 };
@@ -126,6 +138,7 @@ exports.updateStudent = async (req, res) => {
       });
     }
 
+    // Update Profile
     student = await Student.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -133,6 +146,11 @@ exports.updateStudent = async (req, res) => {
       .populate('user', '-password')
       .populate('course')
       .populate('department');
+
+    // Optional: Update User details if provided in body (firstName, etc.)
+    if (req.body.firstName || req.body.lastName || req.body.email) {
+       await User.findByIdAndUpdate(student.user._id, req.body, { new: true });
+    }
 
     res.status(200).json({
       success: true,
@@ -151,10 +169,15 @@ exports.updateStudent = async (req, res) => {
 // @route   DELETE /api/students/:id
 // @access  Private/Admin
 exports.deleteStudent = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const student = await Student.findById(req.params.id);
+    const student = await Student.findById(req.params.id).session(session);
 
     if (!student) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(404).json({
         success: false,
         message: 'Student not found',
@@ -162,8 +185,12 @@ exports.deleteStudent = async (req, res) => {
     }
 
     // Delete associated user account
-    await User.findByIdAndDelete(student.user);
-    await student.deleteOne();
+    await User.findByIdAndDelete(student.user).session(session);
+    // Delete student profile
+    await student.deleteOne({ session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(200).json({
       success: true,
@@ -171,6 +198,8 @@ exports.deleteStudent = async (req, res) => {
       data: {},
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({
       success: false,
       message: error.message,
