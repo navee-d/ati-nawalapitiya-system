@@ -27,16 +27,6 @@ const userSchema = new mongoose.Schema({
     enum: ['student', 'lecturer', 'hod', 'staff', 'admin', 'director'],
     required: [true, 'Role is required'],
   },
-  activeSession: {
-    type: String,
-    default: null,
-  },
-  lastLoginAt: {
-    type: Date,
-  },
-  lastLoginIP: {
-    type: String,
-  },
   firstName: {
     type: String,
     required: [true, 'First name is required'],
@@ -63,6 +53,17 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true,
+  },
+  // Used to enforce single active login session per account.
+  // When a user logs in, we generate a new session id and store it here.
+  // Any previously issued JWT with an older session id will be rejected.
+  currentSessionId: {
+    type: String,
+    default: null,
+  },
+  lastLoginAt: {
+    type: Date,
+    default: null,
   },
   createdAt: {
     type: Date,

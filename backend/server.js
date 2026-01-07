@@ -9,7 +9,25 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+const corsOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow non-browser clients (no Origin header) like curl/Postman.
+      if (!origin) return callback(null, true);
+      // If no allowlist provided, allow all (safe default for local dev).
+      if (corsOrigins.length === 0) return callback(null, true);
+      return corsOrigins.includes(origin)
+        ? callback(null, true)
+        : callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

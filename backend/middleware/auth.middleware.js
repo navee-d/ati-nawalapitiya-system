@@ -28,6 +28,15 @@ exports.protect = async (req, res, next) => {
         });
       }
 
+      // Single-session enforcement: if token carries a session id, it must match
+      // the user's currentSessionId (which is rotated on each login).
+      if (decoded.sid && req.user.currentSessionId && decoded.sid !== req.user.currentSessionId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Session expired (logged in from another device). Please login again.',
+        });
+      }
+
       next();
     } catch (error) {
       return res.status(401).json({
@@ -46,7 +55,13 @@ exports.protect = async (req, res, next) => {
 // Authorize specific roles
 exports.authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    const expandedRoles = new Set(roles);
+    // Treat director as admin-equivalent wherever admin is allowed
+    if (expandedRoles.has('admin')) {
+      expandedRoles.add('director');
+    }
+
+    if (!expandedRoles.has(req.user.role)) {
       return res.status(403).json({
         success: false,
         message: `User role '${req.user.role}' is not authorized to access this route`,

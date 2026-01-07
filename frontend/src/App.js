@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import './App.css';
+import api from './services/api';
 import Home from './pages/Home';
 import Students from './pages/Students';
 import Lecturers from './pages/Lecturers';
@@ -33,31 +34,101 @@ function AppContent() {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [theme, setTheme] = useState('dark');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authStatus, setAuthStatus] = useState(() => {
+    return localStorage.getItem('token') ? 'checking' : 'unauthenticated';
+  }); // checking | authenticated | unauthenticated
 
-  // Check authentication on mount and location change
+  const validatedTokenRef = useRef(null);
+  const validationInProgressRef = useRef(false);
+
+  // Validate auth on refresh; force login first, then dashboard after /auth/me succeeds.
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setIsAuthenticated(false);
-        navigate('/login');
-      }
-    } else {
-      setIsAuthenticated(false);
+
+    if (!token) {
+      localStorage.removeItem('user');
+      setUser(null);
+      setAuthStatus('unauthenticated');
+      validatedTokenRef.current = null;
       if (location.pathname !== '/login') {
         navigate('/login');
       }
+      return;
     }
+
+    // If we already have user info stored (from login), show the app immediately.
+    // We'll still validate the session in the background via /auth/me.
+    if (userData && authStatus !== 'authenticated') {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        setAuthStatus('authenticated');
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('user');
+      }
+    }
+
+    // Avoid re-validating the same token on every route change.
+    if (validatedTokenRef.current === token) {
+      setAuthStatus('authenticated');
+      return;
+    }
+
+    if (validationInProgressRef.current) {
+      return;
+    }
+
+    validationInProgressRef.current = true;
+    setAuthStatus('checking');
+    let cancelled = false;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      try {
+        controller.abort();
+      } catch {
+        // ignore
+      }
+    }, 5000);
+
+    api
+      .get('/auth/me', { signal: controller.signal })
+      .then((response) => {
+        if (cancelled) return;
+        const me = response.data?.data || response.data;
+        localStorage.setItem('user', JSON.stringify(me));
+        setUser(me);
+        setAuthStatus('authenticated');
+        validatedTokenRef.current = token;
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error('Auth validation failed:', err?.response?.data || err?.message || err);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+        setAuthStatus('unauthenticated');
+        validatedTokenRef.current = null;
+        if (location.pathname !== '/login') {
+          navigate('/login');
+        }
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
+        validationInProgressRef.current = false;
+      });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      try {
+        controller.abort();
+      } catch {
+        // ignore
+      }
+    };
   }, [location.pathname, navigate]);
 
   // Load theme from localStorage on mount
@@ -78,13 +149,23 @@ function AppContent() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    setIsAuthenticated(false);
+    setAuthStatus('unauthenticated');
     navigate('/login');
   };
 
+  if (authStatus === 'checking') {
+    return (
+      <div className="App" style={{ minHeight: '100vh', width: '100%' }}>
+        <div style={{ margin: 'auto', color: 'var(--text-primary)', fontWeight: 600 }}>
+          Loading...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="App">
-      {isAuthenticated ? (
+      {authStatus === 'authenticated' ? (
         <>
           {/* Left Sidebar Navigation */}
           <aside className="sidebar">

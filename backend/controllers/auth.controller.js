@@ -1,18 +1,15 @@
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const User = require('../models/User.model');
+const crypto = require('crypto');
 
-// Generate JWT Token with session ID
-const generateToken = (id, sessionId) => {
-  return jwt.sign({ id, sessionId }, process.env.JWT_SECRET, {
+// Generate JWT Token
+const generateToken = (id, sid) => {
+  return jwt.sign({ id, sid }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '30d',
   });
 };
 
-// Generate unique session ID
-const generateSessionId = () => {
-  return crypto.randomBytes(32).toString('hex');
-};
+const generateSessionId = () => crypto.randomBytes(24).toString('hex');
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -44,7 +41,12 @@ exports.register = async (req, res) => {
       address,
     });
 
-    const token = generateToken(user._id);
+    // Start a session immediately after registration
+    user.currentSessionId = generateSessionId();
+    user.lastLoginAt = new Date();
+    await user.save();
+
+    const token = generateToken(user._id, user.currentSessionId);
 
     res.status(201).json({
       success: true,
@@ -108,28 +110,16 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate new session ID
-    const sessionId = generateSessionId();
-    
-    // Get client IP
-    const clientIP = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'];
-    
-    // Check if user is admin or director - enforce single session
-    const hadActiveSession = user.activeSession !== null;
-    
-    // Update user with new session info
-    user.activeSession = sessionId;
+    // Enforce single active session: new login invalidates older tokens
+    user.currentSessionId = generateSessionId();
     user.lastLoginAt = new Date();
-    user.lastLoginIP = clientIP;
     await user.save();
 
-    const token = generateToken(user._id, sessionId);
+    const token = generateToken(user._id, user.currentSessionId);
 
     res.status(200).json({
       success: true,
-      message: hadActiveSession && ['admin', 'director'].includes(user.role) 
-        ? 'Login successful. Previous session has been terminated.' 
-        : 'Login successful',
+      message: 'Login successful',
       data: {
         id: user._id,
         username: user.username,
@@ -138,7 +128,6 @@ exports.login = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         token,
-        sessionTerminated: hadActiveSession && ['admin', 'director'].includes(user.role),
       },
     });
   } catch (error) {

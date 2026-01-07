@@ -8,7 +8,8 @@
     "dev": "nodemon backend/server.js",
     "client": "cd frontend && npm start",
     "install-all": "npm install && cd frontend && npm install",
-    "dev-all": "concurrently \"npm run dev\" \"npm run client\""
+    "dev-all": "concurrently \"npm run dev\" \"npm run client\"",
+    "create-director": "node backend/scripts/create-director.js"
   },
   "keywords": [
     "campus",

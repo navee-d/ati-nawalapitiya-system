@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 function Home() {
   const navigate = useNavigate();
@@ -19,25 +20,22 @@ function Home() {
     // Fetch statistics
     const fetchStats = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const headers = { 'Authorization': `Bearer ${token}` };
-        
         const [studentsRes, lecturersRes, deptRes, coursesRes, staffRes, hodsRes] = await Promise.all([
-          fetch('http://localhost:5000/api/students', { headers }).then(r => r.json()),
-          fetch('http://localhost:5000/api/lecturers', { headers }).then(r => r.json()),
-          fetch('http://localhost:5000/api/departments', { headers }).then(r => r.json()),
-          fetch('http://localhost:5000/api/courses', { headers }).then(r => r.json()),
-          fetch('http://localhost:5000/api/staff', { headers }).then(r => r.json()),
-          fetch('http://localhost:5000/api/hods', { headers }).then(r => r.json())
+          api.get('/students').then(r => r.data),
+          api.get('/lecturers').then(r => r.data),
+          api.get('/departments').then(r => r.data),
+          api.get('/courses').then(r => r.data),
+          api.get('/staff').then(r => r.data),
+          api.get('/hods').then(r => r.data),
         ]);
         
         setStats({
-          students: studentsRes.count || 0,
-          lecturers: lecturersRes.count || 0,
-          departments: deptRes.count || 0,
-          courses: coursesRes.count || 0,
-          staff: staffRes.count || 0,
-          hods: hodsRes.count || 0
+          students: studentsRes?.count || 0,
+          lecturers: lecturersRes?.count || 0,
+          departments: deptRes?.count || 0,
+          courses: coursesRes?.count || 0,
+          staff: staffRes?.count || 0,
+          hods: hodsRes?.count || 0
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
