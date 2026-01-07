@@ -26,6 +26,30 @@ exports.getAllStudents = async (req, res) => {
   }
 };
 
+// @desc    Get students by department
+// @route   GET /api/students/department/:departmentId
+// @access  Private
+exports.getStudentsByDepartment = async (req, res) => {
+  try {
+    const students = await Student.find({ department: req.params.departmentId })
+      .populate('user', '-password')
+      .populate('course')
+      .populate('department')
+      .sort('-createdAt');
+
+    res.status(200).json({
+      success: true,
+      count: students.length,
+      data: students,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // @desc    Get single student
 // @route   GET /api/students/:id
 // @access  Private
@@ -65,13 +89,13 @@ exports.createStudent = async (req, res) => {
   try {
     const {
       username, email, password, firstName, lastName, nic, phone, address,
-      studentId, registrationNumber, course, department, batch, yearOfStudy,
+      studentId, course, department, batch, yearOfStudy,
       semester, enrollmentDate, guardianName, guardianPhone, emergencyContact
     } = req.body;
 
     // 1. Create user account (returns an array when using session)
     const users = await User.create([{
-      username,
+      username: username || email.split('@')[0],
       email,
       password,
       role: 'student',
@@ -88,7 +112,7 @@ exports.createStudent = async (req, res) => {
     const students = await Student.create([{
       user: user._id,
       studentId,
-      registrationNumber,
+      registrationNumber: studentId,
       course,
       department,
       batch,
@@ -136,6 +160,11 @@ exports.updateStudent = async (req, res) => {
         success: false,
         message: 'Student not found',
       });
+    }
+
+    // If studentId is being updated, also update registrationNumber to match
+    if (req.body.studentId) {
+      req.body.registrationNumber = req.body.studentId;
     }
 
     // Update Profile

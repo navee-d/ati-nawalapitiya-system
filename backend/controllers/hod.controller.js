@@ -79,7 +79,7 @@ exports.createHOD = async (req, res) => {
     }
 
     const users = await User.create([{
-      username,
+      username: username || email.split('@')[0],
       email,
       password,
       role: 'hod',

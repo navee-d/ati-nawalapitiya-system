@@ -31,6 +31,8 @@ app.use('/api/courses', require('./routes/course.routes'));
 app.use('/api/departments', require('./routes/department.routes'));
 app.use('/api/timetables', require('./routes/timetable.routes'));
 app.use('/api/convocations', require('./routes/convocation.routes'));
+app.use('/api/exam-results', require('./routes/examResult.routes'));
+app.use('/api/import-export', require('./routes/importExport.routes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Home() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     students: 0,
     lecturers: 0,
     departments: 0,
-    courses: 0
+    courses: 0,
+    staff: 0,
+    hods: 0
   });
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -18,18 +22,22 @@ function Home() {
         const token = localStorage.getItem('token');
         const headers = { 'Authorization': `Bearer ${token}` };
         
-        const [studentsRes, lecturersRes, deptRes, coursesRes] = await Promise.all([
+        const [studentsRes, lecturersRes, deptRes, coursesRes, staffRes, hodsRes] = await Promise.all([
           fetch('http://localhost:5000/api/students', { headers }).then(r => r.json()),
           fetch('http://localhost:5000/api/lecturers', { headers }).then(r => r.json()),
           fetch('http://localhost:5000/api/departments', { headers }).then(r => r.json()),
-          fetch('http://localhost:5000/api/courses', { headers }).then(r => r.json())
+          fetch('http://localhost:5000/api/courses', { headers }).then(r => r.json()),
+          fetch('http://localhost:5000/api/staff', { headers }).then(r => r.json()),
+          fetch('http://localhost:5000/api/hods', { headers }).then(r => r.json())
         ]);
         
         setStats({
-          students: studentsRes.length || 0,
-          lecturers: lecturersRes.length || 0,
-          departments: deptRes.length || 0,
-          courses: coursesRes.length || 0
+          students: studentsRes.count || 0,
+          lecturers: lecturersRes.count || 0,
+          departments: deptRes.count || 0,
+          courses: coursesRes.count || 0,
+          staff: staffRes.count || 0,
+          hods: hodsRes.count || 0
         });
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -41,9 +49,24 @@ function Home() {
 
   return (
     <div className="dashboard">
+      <h1>Dashboard Overview</h1>
+      
+      {/* Quick Links */}
+      <div style={{ marginBottom: '30px' }}>
+        <h3 style={{ marginBottom: '15px' }}>Quick Access</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+          <button className="btn btn-primary" onClick={() => navigate('/students')} style={{ padding: '15px' }}>👨‍🎓 Students</button>
+          <button className="btn btn-primary" onClick={() => navigate('/courses')} style={{ padding: '15px' }}>📖 Courses</button>
+          <button className="btn btn-primary" onClick={() => navigate('/lecturers')} style={{ padding: '15px' }}>👨‍🏫 Lecturers</button>
+          <button className="btn btn-primary" onClick={() => navigate('/staff')} style={{ padding: '15px' }}>👥 Staff</button>
+          <button className="btn btn-primary" onClick={() => navigate('/hods')} style={{ padding: '15px' }}>🎯 HODs</button>
+        </div>
+      </div>
+
       {/* Stats Cards */}
+      <h3 style={{ marginBottom: '15px' }}>Statistics</h3>
       <div className="stats-grid">
-        <div className="stat-card stat-card-blue">
+        <div className="stat-card stat-card-blue" onClick={() => navigate('/students')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon">👨‍🎓</div>
           <div className="stat-info">
             <p className="stat-label">Total Students</p>
@@ -52,7 +75,7 @@ function Home() {
           </div>
         </div>
 
-        <div className="stat-card stat-card-purple">
+        <div className="stat-card stat-card-purple" onClick={() => navigate('/lecturers')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon">👨‍🏫</div>
           <div className="stat-info">
             <p className="stat-label">Total Lecturers</p>
@@ -61,7 +84,7 @@ function Home() {
           </div>
         </div>
 
-        <div className="stat-card stat-card-green">
+        <div className="stat-card stat-card-green" onClick={() => navigate('/students-by-department')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon">🏢</div>
           <div className="stat-info">
             <p className="stat-label">Departments</p>
@@ -70,7 +93,7 @@ function Home() {
           </div>
         </div>
 
-        <div className="stat-card stat-card-orange">
+        <div className="stat-card stat-card-orange" onClick={() => navigate('/courses')} style={{ cursor: 'pointer' }}>
           <div className="stat-icon">📚</div>
           <div className="stat-info">
             <p className="stat-label">Active Courses</p>
@@ -99,22 +122,22 @@ function Home() {
         <div className="dashboard-card">
           <h3 className="card-title">Quick Actions</h3>
           <div className="quick-actions">
-            <a href="/students" className="action-btn">
+            <div className="action-btn" onClick={() => navigate('/students')} style={{ cursor: 'pointer' }}>
               <span className="action-icon">👨‍🎓</span>
               <span>Manage Students</span>
-            </a>
-            <a href="/lecturers" className="action-btn">
+            </div>
+            <div className="action-btn" onClick={() => navigate('/lecturers')} style={{ cursor: 'pointer' }}>
               <span className="action-icon">👨‍🏫</span>
               <span>Manage Lecturers</span>
-            </a>
-            <a href="/courses" className="action-btn">
+            </div>
+            <div className="action-btn" onClick={() => navigate('/courses')} style={{ cursor: 'pointer' }}>
               <span className="action-icon">📚</span>
               <span>Manage Courses</span>
-            </a>
-            <a href="/departments" className="action-btn">
+            </div>
+            <div className="action-btn" onClick={() => navigate('/students-by-department')} style={{ cursor: 'pointer' }}>
               <span className="action-icon">🏢</span>
               <span>Manage Departments</span>
-            </a>
+            </div>
           </div>
         </div>
 

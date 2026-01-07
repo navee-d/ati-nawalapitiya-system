@@ -1,40 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import './App.css';
 import Home from './pages/Home';
 import Students from './pages/Students';
 import Lecturers from './pages/Lecturers';
 import HODs from './pages/HODs';
 import Staff from './pages/Staff';
-import Departments from './pages/Departments';
 import Courses from './pages/Courses';
 import Timetable from './pages/Timetable';
 import Login from './pages/Login';
+import StudentsByDepartment from './pages/StudentsByDepartment';
+import StudentDetail from './pages/StudentDetail';
+import LecturerDetail from './pages/LecturerDetail';
+import HODDetail from './pages/HODDetail';
+import StaffDetail from './pages/StaffDetail';
+import Exam from './pages/Exam';
+import ImportExport from './pages/ImportExport';
+
+// Protected Route Component
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+}
 
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState('dark');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Check authentication on mount and location change
   useEffect(() => {
+    const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+    
+    if (token && userData) {
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setIsAuthenticated(false);
+        navigate('/login');
+      }
+    } else {
+      setIsAuthenticated(false);
+      if (location.pathname !== '/login') {
+        navigate('/login');
+      }
     }
-  }, [location]);
+  }, [location.pathname, navigate]);
+
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    setIsAuthenticated(false);
     navigate('/login');
   };
 
-  const isLoggedIn = !!localStorage.getItem('token');
-
   return (
     <div className="App">
-      {isLoggedIn ? (
+      {isAuthenticated ? (
         <>
           {/* Left Sidebar Navigation */}
           <aside className="sidebar">
@@ -48,32 +98,10 @@ function AppContent() {
                 <span className="nav-icon">🏠</span>
                 <span className="nav-text">Dashboard</span>
               </Link>
-              
-              <Link to="/departments" className={location.pathname === '/departments' ? 'nav-item active' : 'nav-item'}>
-                <span className="nav-icon">🏢</span>
-                <span className="nav-text">Departments</span>
-              </Link>
 
-              <div className="nav-section-title">Students by Department</div>
-              <Link to="/students/it" className={location.pathname === '/students/it' ? 'nav-item active' : 'nav-item'}>
-                <span className="nav-icon">💻</span>
-                <span className="nav-text">IT Students</span>
-              </Link>
-              <Link to="/students/thm" className={location.pathname === '/students/thm' ? 'nav-item active' : 'nav-item'}>
-                <span className="nav-icon">🏨</span>
-                <span className="nav-text">THM Students</span>
-              </Link>
-              <Link to="/students/mg" className={location.pathname === '/students/mg' ? 'nav-item active' : 'nav-item'}>
-                <span className="nav-icon">📊</span>
-                <span className="nav-text">MG Students</span>
-              </Link>
-              <Link to="/students/bf" className={location.pathname === '/students/bf' ? 'nav-item active' : 'nav-item'}>
-                <span className="nav-icon">💼</span>
-                <span className="nav-text">BF Students</span>
-              </Link>
-              <Link to="/students/english" className={location.pathname === '/students/english' ? 'nav-item active' : 'nav-item'}>
-                <span className="nav-icon">📚</span>
-                <span className="nav-text">English Students</span>
+              <Link to="/students-by-department" className={location.pathname === '/students-by-department' ? 'nav-item active' : 'nav-item'}>
+                <span className="nav-icon">📋</span>
+                <span className="nav-text">Students by Dept</span>
               </Link>
 
               <div className="nav-section-title">Staff Management</div>
@@ -99,6 +127,16 @@ function AppContent() {
                 <span className="nav-icon">📅</span>
                 <span className="nav-text">Timetable</span>
               </Link>
+              <Link to="/exam" className={location.pathname.startsWith('/exam') ? 'nav-item active' : 'nav-item'}>
+                <span className="nav-icon">📊</span>
+                <span className="nav-text">Exam</span>
+              </Link>
+
+              <div className="nav-section-title">Data Management</div>
+              <Link to="/import-export" className={location.pathname === '/import-export' ? 'nav-item active' : 'nav-item'}>
+                <span className="nav-icon">🔄</span>
+                <span className="nav-text">Import / Export</span>
+              </Link>
             </nav>
 
             {user && (
@@ -110,6 +148,10 @@ function AppContent() {
                     <p className="user-role">{user.role}</p>
                   </div>
                 </div>
+                <button onClick={toggleTheme} className="theme-toggle-btn">
+                  <span>{theme === 'light' ? '🌙' : '☀️'}</span>
+                  <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+                </button>
                 <button onClick={handleLogout} className="logout-btn">
                   <span>🚪</span>
                   <span>Logout</span>
@@ -121,25 +163,28 @@ function AppContent() {
           {/* Main Content Area */}
           <main className="main-content">
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/departments" element={<Departments />} />
-              <Route path="/students" element={<Students />} />
-              <Route path="/students/it" element={<Students department="IT" />} />
-              <Route path="/students/thm" element={<Students department="THM" />} />
-              <Route path="/students/mg" element={<Students department="MG" />} />
-              <Route path="/students/bf" element={<Students department="BF" />} />
-              <Route path="/students/english" element={<Students department="English" />} />
-              <Route path="/lecturers" element={<Lecturers />} />
-              <Route path="/hods" element={<HODs />} />
-              <Route path="/staff" element={<Staff />} />
-              <Route path="/courses" element={<Courses />} />
-              <Route path="/timetable" element={<Timetable />} />
+              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
+              <Route path="/students/:id" element={<ProtectedRoute><StudentDetail /></ProtectedRoute>} />
+              <Route path="/students-by-department" element={<ProtectedRoute><StudentsByDepartment /></ProtectedRoute>} />
+              <Route path="/lecturers" element={<ProtectedRoute><Lecturers /></ProtectedRoute>} />
+              <Route path="/lecturers/:id" element={<ProtectedRoute><LecturerDetail /></ProtectedRoute>} />
+              <Route path="/hods" element={<ProtectedRoute><HODs /></ProtectedRoute>} />
+              <Route path="/hods/:id" element={<ProtectedRoute><HODDetail /></ProtectedRoute>} />
+              <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
+              <Route path="/staff/:id" element={<ProtectedRoute><StaffDetail /></ProtectedRoute>} />
+              <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
+              <Route path="/timetable" element={<ProtectedRoute><Timetable /></ProtectedRoute>} />
+              <Route path="/exam" element={<ProtectedRoute><Exam /></ProtectedRoute>} />
+              <Route path="/import-export" element={<ProtectedRoute><ImportExport /></ProtectedRoute>} />
+              <Route path="/login" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
         </>
       ) : (
         <Routes>
-          <Route path="*" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       )}
     </div>

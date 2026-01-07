@@ -16,11 +16,13 @@ router.route('/')
   .get(getAllStudents)
   .post(authorize('admin', 'hod'), createStudent);
 
+// Department route must come before /:id to avoid matching 'department' as an ID
+router.route('/department/:departmentId')
+  .get(getStudentsByDepartment);
+
 router.route('/:id')
   .get(getStudent)
   .put(authorize('admin', 'hod'), updateStudent)
   .delete(authorize('admin'), deleteStudent);
-
-router.get('/department/:departmentId', getStudentsByDepartment);
 
 module.exports = router;

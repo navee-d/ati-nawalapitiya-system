@@ -2,7 +2,7 @@
   padding: 30px;
   max-width: 1600px;
   margin: 0 auto;
-  background: #f5f7fa;
+  background: transparent;
   min-height: 100vh;
 }
 
@@ -16,7 +16,7 @@
 }
 
 .timetable-header h1 {
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0;
   font-size: 32px;
   font-weight: 700;
@@ -33,22 +33,23 @@
   margin-bottom: 25px;
   flex-wrap: wrap;
   align-items: center;
-  background: white;
+  background: var(--bg-card);
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px var(--shadow-color);
+  border: 1px solid var(--border-color);
 }
 
 .filters select,
 .filters input {
   padding: 10px 16px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   transition: all 0.3s ease;
-  background: white;
-  color: #475569;
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .filters select:hover,
@@ -67,7 +68,7 @@
   display: flex;
   gap: 0;
   margin-left: auto;
-  background: #f1f5f9;
+  background: var(--bg-hover);
   border-radius: 10px;
   padding: 4px;
 }
@@ -80,7 +81,7 @@
   transition: all 0.3s ease;
   font-weight: 600;
   font-size: 14px;
-  color: #64748b;
+  color: var(--text-muted);
   border-radius: 8px;
 }
 
@@ -89,18 +90,18 @@
 }
 
 .view-toggle button.active {
-  background: white;
+  background: var(--bg-card);
   color: #4f46e5;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 .timetable-form {
-  background: white;
+  background: var(--bg-card);
   padding: 30px;
   border-radius: 16px;
   margin-bottom: 30px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px var(--shadow-color);
+  border: 1px solid var(--border-color);
 }
 
 .form-grid {
@@ -122,7 +123,7 @@
 .form-group label {
   margin-bottom: 8px;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-primary);
   font-size: 14px;
 }
 
@@ -130,11 +131,12 @@
 .form-group select,
 .form-group textarea {
   padding: 12px 16px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border-color);
   border-radius: 10px;
   font-size: 14px;
   transition: all 0.3s ease;
-  background: #f8fafc;
+  background: var(--bg-card);
+  color: var(--text-primary);
 }
 
 .form-group input:focus,
@@ -142,7 +144,7 @@
 .form-group textarea:focus {
   outline: none;
   border-color: #4f46e5;
-  background: white;
+  background: var(--bg-card);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
@@ -217,11 +219,11 @@
 }
 
 .timetable-table {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px var(--shadow-color);
+  border: 1px solid var(--border-color);
 }
 
 .timetable-table table {
@@ -242,8 +244,8 @@
 
 .timetable-table td {
   padding: 16px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #475569;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -252,9 +254,9 @@
 }
 
 .timetable-table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--bg-hover);
   transform: scale(1.01);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .timetable-table td.actions {
@@ -265,7 +267,7 @@
 .timetable-table td.no-data {
   text-align: center;
   padding: 40px;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .weekly-timetable {
@@ -275,17 +277,17 @@
 }
 
 .day-column {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px var(--shadow-color);
+  border: 1px solid var(--border-color);
   transition: all 0.3s ease;
 }
 
 .day-column:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px var(--shadow-color);
 }
 
 .day-column h3 {
@@ -305,13 +307,13 @@
 }
 
 .session-card {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: var(--bg-hover);
   padding: 16px;
   margin-bottom: 12px;
   border-radius: 12px;
   border-left: 5px solid #4f46e5;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 .session-card:hover {
@@ -337,13 +339,13 @@
 
 .session-course {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
   margin-bottom: 6px;
   font-size: 14px;
 }
 
 .session-lecturer {
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 13px;
   margin-bottom: 4px;
   display: flex;
@@ -357,7 +359,7 @@
 }
 
 .session-room {
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 13px;
   margin-bottom: 8px;
   display: flex;
@@ -386,7 +388,7 @@
 
 .no-sessions {
   text-align: center;
-  color: #999;
+  color: var(--text-muted);
   padding: 20px;
   font-size: 14px;
 }
@@ -396,7 +398,7 @@
   border-radius: 12px;
   margin-bottom: 24px;
   font-weight: 500;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 .alert-error {
@@ -408,7 +410,7 @@
 .loading {
   text-align: center;
   padding: 60px;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 18px;
   font-weight: 600;
 }

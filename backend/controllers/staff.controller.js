@@ -68,7 +68,7 @@ exports.createStaff = async (req, res) => {
     } = req.body;
 
     const users = await User.create([{
-      username,
+      username: username || email.split('@')[0],
       email,
       password,
       role: 'staff',

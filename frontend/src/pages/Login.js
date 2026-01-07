@@ -25,25 +25,47 @@ function Login() {
 
     try {
       const response = await api.post('/auth/login', formData);
-      localStorage.setItem('token', response.data.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.data));
       
-      // Force navigation to home page
-      window.location.href = '/';
+      // Handle different response structures
+      const data = response.data.data || response.data;
+      const token = data.token;
+      
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(data));
+        
+        // Force page reload to ensure authentication state is properly set
+        window.location.href = '/';
+      } else {
+        setError('Invalid response from server');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="card" style={{ maxWidth: '500px', margin: '50px auto' }}>
-      <h2>Login to Campus Management System</h2>
-      
-      {error && <div className="alert alert-error">{error}</div>}
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      minHeight: '100vh',
+      width: '100%',
+      padding: '20px',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0
+    }}>
+      <div className="card" style={{ maxWidth: '500px', width: '100%', margin: 'auto' }}>
+        <h2 style={{ textAlign: 'center' }}>Login to SLIATE ATI Nawalapitiya System</h2>
+        
+        {error && <div className="alert alert-error">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Email Address</label>
           <input
@@ -82,6 +104,7 @@ function Login() {
         <p style={{ color: '#666' }}>
           Don't have an account? Contact your administrator.
         </p>
+      </div>
       </div>
     </div>
   );

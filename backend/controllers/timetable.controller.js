@@ -72,6 +72,7 @@ exports.getTimetableById = async (req, res) => {
 // Create new timetable entry
 exports.createTimetable = async (req, res) => {
   try {
+    console.log('Creating timetable with data:', req.body);
     const timetable = await Timetable.create(req.body);
     
     const populatedTimetable = await Timetable.findById(timetable._id)
@@ -88,9 +89,10 @@ exports.createTimetable = async (req, res) => {
       data: populatedTimetable
     });
   } catch (error) {
+    console.error('Timetable creation error:', error);
     res.status(400).json({
       success: false,
-      message: 'Error creating timetable entry',
+      message: error.message || 'Error creating timetable entry',
       error: error.message
     });
   }

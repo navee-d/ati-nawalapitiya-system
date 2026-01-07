@@ -27,6 +27,10 @@ exports.getAllDepartments = async (req, res) => {
 // @access  Private
 exports.getDepartment = async (req, res) => {
   try {
+    const Student = require('../models/Student.model');
+    const Course = require('../models/Course.model');
+    const Lecturer = require('../models/Lecturer.model');
+    
     const department = await Department.findById(req.params.id)
       .populate('hod');
 
@@ -37,9 +41,19 @@ exports.getDepartment = async (req, res) => {
       });
     }
 
+    // Get counts
+    const studentCount = await Student.countDocuments({ department: req.params.id });
+    const courseCount = await Course.countDocuments({ department: req.params.id });
+    const lecturerCount = await Lecturer.countDocuments({ department: req.params.id });
+
     res.status(200).json({
       success: true,
-      data: department,
+      data: {
+        ...department.toObject(),
+        studentCount,
+        courseCount,
+        lecturerCount
+      },
     });
   } catch (error) {
     res.status(500).json({

@@ -24,8 +24,18 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'lecturer', 'hod', 'staff', 'admin'],
+    enum: ['student', 'lecturer', 'hod', 'staff', 'admin', 'director'],
     required: [true, 'Role is required'],
+  },
+  activeSession: {
+    type: String,
+    default: null,
+  },
+  lastLoginAt: {
+    type: Date,
+  },
+  lastLoginIP: {
+    type: String,
   },
   firstName: {
     type: String,

@@ -104,8 +104,11 @@ const Timetable = () => {
       setEditingId(null);
       resetForm();
       fetchTimetables();
+      setError('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save timetable entry');
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to save timetable entry';
+      setError(errorMsg);
+      console.error('Timetable error:', err.response?.data);
     }
   };
 

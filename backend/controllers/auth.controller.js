@@ -1,11 +1,17 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User.model');
 
-// Generate JWT Token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+// Generate JWT Token with session ID
+const generateToken = (id, sessionId) => {
+  return jwt.sign({ id, sessionId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '30d',
   });
+};
+
+// Generate unique session ID
+const generateSessionId = () => {
+  return crypto.randomBytes(32).toString('hex');
 };
 
 // @desc    Register user
@@ -102,11 +108,28 @@ exports.login = async (req, res) => {
       });
     }
 
-    const token = generateToken(user._id);
+    // Generate new session ID
+    const sessionId = generateSessionId();
+    
+    // Get client IP
+    const clientIP = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'];
+    
+    // Check if user is admin or director - enforce single session
+    const hadActiveSession = user.activeSession !== null;
+    
+    // Update user with new session info
+    user.activeSession = sessionId;
+    user.lastLoginAt = new Date();
+    user.lastLoginIP = clientIP;
+    await user.save();
+
+    const token = generateToken(user._id, sessionId);
 
     res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: hadActiveSession && ['admin', 'director'].includes(user.role) 
+        ? 'Login successful. Previous session has been terminated.' 
+        : 'Login successful',
       data: {
         id: user._id,
         username: user.username,
@@ -115,6 +138,7 @@ exports.login = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         token,
+        sessionTerminated: hadActiveSession && ['admin', 'director'].includes(user.role),
       },
     });
   } catch (error) {
